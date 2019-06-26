@@ -18,12 +18,17 @@ import brave.Tracer;
 import org.apache.kafka.streams.kstream.Transformer;
 import org.apache.kafka.streams.processor.ProcessorContext;
 
+import java.util.Collections;
+import java.util.Map;
+
 class TracingTransformer<K, V, R> implements Transformer<K, V, R> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
   final Tracer tracer;
   final String spanName;
   final Transformer<K, V, R> delegateTransformer;
+  final Map<Long, String> annotations;
+  final Map<String, String> tags;
 
   ProcessorContext processorContext;
 
@@ -33,6 +38,19 @@ class TracingTransformer<K, V, R> implements Transformer<K, V, R> {
     this.tracer = kafkaStreamsTracing.tracing.tracer();
     this.spanName = spanName;
     this.delegateTransformer = delegateTransformer;
+    this.annotations = Collections.emptyMap();
+    this.tags = Collections.emptyMap();
+  }
+
+  TracingTransformer(KafkaStreamsTracing kafkaStreamsTracing, String spanName,
+      Map<Long, String> annotations, Map<String, String> tags,
+      Transformer<K, V, R> delegateTransformer) {
+    this.kafkaStreamsTracing = kafkaStreamsTracing;
+    this.tracer = kafkaStreamsTracing.tracing.tracer();
+    this.spanName = spanName;
+    this.delegateTransformer = delegateTransformer;
+    this.annotations = annotations;
+    this.tags = tags;
   }
 
   @Override
@@ -47,6 +65,8 @@ class TracingTransformer<K, V, R> implements Transformer<K, V, R> {
     if (!span.isNoop()) {
       span.name(spanName);
       span.start();
+      this.annotations.forEach(span::annotate);
+      this.tags.forEach(span::tag);
     }
 
     try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {

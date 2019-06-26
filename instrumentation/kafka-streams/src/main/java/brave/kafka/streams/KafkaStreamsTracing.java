@@ -19,6 +19,8 @@ import brave.Tracing;
 import brave.kafka.clients.KafkaTracing;
 import brave.propagation.TraceContext;
 import brave.propagation.TraceContextOrSamplingFlags;
+
+import java.util.Map;
 import java.util.Properties;
 import org.apache.kafka.common.header.Headers;
 import org.apache.kafka.streams.KafkaClientSupplier;
@@ -173,6 +175,19 @@ public final class KafkaStreamsTracing {
   }
 
   /**
+   * Similar to {@link KafkaStreamsTracing#foreach(String, ForeachAction)},
+   * with the ability to inject annotations and tags into the resulting span.
+   */
+  public <K, V> ProcessorSupplier<K, V> foreach(String spanName,
+      Map<Long, String> annotations, Map<String, String> tags, ForeachAction<K, V> action) {
+    return new TracingProcessorSupplier<>(this, spanName, annotations, tags, new AbstractProcessor<K, V>() {
+      @Override public void process(K key, V value) {
+        action.apply(key, value);
+      }
+    });
+  }
+
+  /**
    * Create a peek transformer, similar to {@link KStream#peek(ForeachAction)}, where its action
    * will be recorded in a new span with the indicated name.
    *
@@ -214,6 +229,19 @@ public final class KafkaStreamsTracing {
    */
   public <K, V> TransformerSupplier<K, V, KeyValue<K, V>> mark(String spanName) {
     return new TracingTransformerSupplier<>(this, spanName, new AbstractTracingTransformer<K, V, KeyValue<K, V>>() {
+      @Override public KeyValue<K, V> transform(K key, V value) {
+        return KeyValue.pair(key, value);
+      }
+    });
+  }
+
+  /**
+   * Similar to {@link KafkaStreamsTracing#mark(String)},
+   * with the ability to inject annotations and tags into the resulting span.
+   */
+  public <K, V> TransformerSupplier<K, V, KeyValue<K, V>> mark(String spanName,
+     Map<Long, String> annotations, Map<String, String> tags) {
+    return new TracingTransformerSupplier<>(this, spanName, annotations, tags, new AbstractTracingTransformer<K, V, KeyValue<K, V>>() {
       @Override public KeyValue<K, V> transform(K key, V value) {
         return KeyValue.pair(key, value);
       }

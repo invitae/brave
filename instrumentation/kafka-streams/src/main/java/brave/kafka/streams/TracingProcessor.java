@@ -18,12 +18,17 @@ import brave.Tracer;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorContext;
 
+import java.util.Collections;
+import java.util.Map;
+
 class TracingProcessor<K, V> implements Processor<K, V> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
   final Tracer tracer;
   final String spanName;
   final Processor<K, V> delegateProcessor;
+  final Map<Long, String> annotations;
+  final Map<String, String> tags;
 
   ProcessorContext processorContext;
 
@@ -33,6 +38,20 @@ class TracingProcessor<K, V> implements Processor<K, V> {
     this.tracer = kafkaStreamsTracing.tracing.tracer();
     this.spanName = spanName;
     this.delegateProcessor = delegateProcessor;
+    this.annotations = Collections.emptyMap();
+    this.tags = Collections.emptyMap();
+  }
+
+  TracingProcessor(KafkaStreamsTracing kafkaStreamsTracing,
+      String spanName,
+      Map<Long, String> annotations, Map<String, String> tags,
+      Processor<K, V> delegateProcessor) {
+    this.kafkaStreamsTracing = kafkaStreamsTracing;
+    this.tracer = kafkaStreamsTracing.tracing.tracer();
+    this.spanName = spanName;
+    this.delegateProcessor = delegateProcessor;
+    this.annotations = annotations;
+    this.tags = tags;
   }
 
   @Override
@@ -47,6 +66,8 @@ class TracingProcessor<K, V> implements Processor<K, V> {
     if (!span.isNoop()) {
       span.name(spanName);
       span.start();
+      this.annotations.forEach(span::annotate);
+      this.tags.forEach(span::tag);
     }
 
     try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {

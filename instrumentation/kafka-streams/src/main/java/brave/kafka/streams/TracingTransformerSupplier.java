@@ -16,10 +16,15 @@ package brave.kafka.streams;
 import org.apache.kafka.streams.kstream.Transformer;
 import org.apache.kafka.streams.kstream.TransformerSupplier;
 
+import java.util.Collections;
+import java.util.Map;
+
 class TracingTransformerSupplier<K, V, R> implements TransformerSupplier<K, V, R> {
   final KafkaStreamsTracing kafkaStreamsTracing;
   final String spanName;
   final Transformer<K, V, R> delegateTransformer;
+  final Map<Long,String> annotations;
+  final Map<String, String> tags;
 
   TracingTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName,
@@ -27,10 +32,22 @@ class TracingTransformerSupplier<K, V, R> implements TransformerSupplier<K, V, R
     this.kafkaStreamsTracing = kafkaStreamsTracing;
     this.spanName = spanName;
     this.delegateTransformer = delegateTransformer;
+    this.annotations = Collections.emptyMap();
+    this.tags = Collections.emptyMap();
+  }
+
+  TracingTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
+      String spanName, Map<Long, String> annotations, Map<String, String> tags,
+      Transformer<K, V, R> delegateTransformer) {
+    this.kafkaStreamsTracing = kafkaStreamsTracing;
+    this.spanName = spanName;
+    this.delegateTransformer = delegateTransformer;
+    this.annotations = annotations;
+    this.tags = tags;
   }
 
   /** This wraps transform method to enable tracing. */
   @Override public Transformer<K, V, R> get() {
-    return new TracingTransformer<>(kafkaStreamsTracing, spanName, delegateTransformer);
+    return new TracingTransformer<>(kafkaStreamsTracing, spanName, annotations, tags, delegateTransformer);
  }
 }

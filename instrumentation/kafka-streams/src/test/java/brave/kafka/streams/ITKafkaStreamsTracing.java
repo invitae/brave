@@ -19,10 +19,8 @@ import brave.propagation.StrictScopeDecorator;
 import brave.propagation.ThreadLocalCurrentTraceContext;
 import com.github.charithe.kafka.EphemeralKafkaBroker;
 import com.github.charithe.kafka.KafkaJunitRule;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Properties;
+
+import java.util.*;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -413,8 +411,89 @@ public class ITKafkaStreamsTracing {
   }
 
   @Test
+  public void should_create_spans_from_stream_with_tracing_mark_tags() throws Exception {
+    String inputTopic = testName.getMethodName() + "-input";
+    String outputTopic = testName.getMethodName() + "-output";
+
+    long now = System.currentTimeMillis();
+
+    Map<Long, String> annotations = new HashMap<Long, String>(){{ put(now, "anno-1"); }};
+    Map<String, String> tags = new HashMap<String, String>() {
+      {
+        put("key-1", "value-1");
+      }
+    };
+
+    StreamsBuilder builder = new StreamsBuilder();
+    builder.stream(inputTopic, Consumed.with(Serdes.String(), Serdes.String()))
+        .transform(kafkaStreamsTracing.mark("mark-1", annotations, tags))
+        .to(outputTopic, Produced.with(Serdes.String(), Serdes.String()));
+    Topology topology = builder.build();
+
+    KafkaStreams streams = buildKafkaStreams(topology);
+
+    producer = createProducer();
+    producer.send(new ProducerRecord<>(inputTopic, TEST_KEY, TEST_VALUE)).get();
+
+    waitForStreamToRun(streams);
+
+    Span spanInput = takeSpan(), spanProcessor = takeSpan(), spanOutput = takeSpan();
+
+    assertThat(spanInput.kind().name()).isEqualTo(brave.Span.Kind.CONSUMER.name());
+    assertThat(spanInput.traceId()).isEqualTo(spanProcessor.traceId());
+    assertThat(spanProcessor.traceId()).isEqualTo(spanOutput.traceId());
+    assertThat(spanInput.tags()).containsEntry("kafka.topic", inputTopic);
+    assertThat(spanProcessor.tags()).containsEntry("key-1", "value-1");
+    assertThat(spanProcessor.annotations()).contains(Annotation.create(now, "anno-1"));
+
+    streams.close();
+    streams.cleanUp();
+  }
+
+  @Test
   public void should_create_spans_from_stream_with_tracing_foreach() throws Exception {
     String inputTopic = testName.getMethodName() + "-input";
+
+    StreamsBuilder builder = new StreamsBuilder();
+    builder.stream(inputTopic, Consumed.with(Serdes.String(), Serdes.String()))
+        .process(kafkaStreamsTracing.foreach("foreach-1", (key, value) -> {
+          try {
+            Thread.sleep(100L);
+          } catch (InterruptedException e) {
+            e.printStackTrace();
+          }
+        }));
+    Topology topology = builder.build();
+
+    KafkaStreams streams = buildKafkaStreams(topology);
+
+    producer = createProducer();
+    producer.send(new ProducerRecord<>(inputTopic, TEST_KEY, TEST_VALUE)).get();
+
+    waitForStreamToRun(streams);
+
+    Span spanInput = takeSpan(), spanProcessor = takeSpan();
+
+    assertThat(spanInput.kind().name()).isEqualTo(brave.Span.Kind.CONSUMER.name());
+    assertThat(spanInput.traceId()).isEqualTo(spanProcessor.traceId());
+    assertThat(spanInput.tags()).containsEntry("kafka.topic", inputTopic);
+
+    streams.close();
+    streams.cleanUp();
+  }
+
+  @Test
+  public void should_create_spans_from_stream_with_tracing_foreach_tags() throws Exception {
+    String inputTopic = testName.getMethodName() + "-input";
+
+    long now = System.currentTimeMillis();
+
+    Map<Long, String> annotations = new HashMap<Long, String>(){{ put(now, "anno-1"); }};
+    Map<String, String> tags = new HashMap<String, String>() {
+      {
+        put("key-1", "value-1");
+      }
+    };
 
     StreamsBuilder builder = new StreamsBuilder();
     builder.stream(inputTopic, Consumed.with(Serdes.String(), Serdes.String()))

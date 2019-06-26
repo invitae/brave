@@ -16,11 +16,16 @@ package brave.kafka.streams;
 import org.apache.kafka.streams.processor.Processor;
 import org.apache.kafka.streams.processor.ProcessorSupplier;
 
+import java.util.Collections;
+import java.util.Map;
+
 class TracingProcessorSupplier<K, V> implements ProcessorSupplier<K, V> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
   final String spanName;
   final Processor<K, V> delegateProcessor;
+  final Map<Long, String> annotations;
+  final Map<String, String> tags;
 
   TracingProcessorSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName,
@@ -28,10 +33,22 @@ class TracingProcessorSupplier<K, V> implements ProcessorSupplier<K, V> {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
     this.spanName = spanName;
     this.delegateProcessor = delegateProcessor;
+    this.annotations = Collections.emptyMap();
+    this.tags = Collections.emptyMap();
+  }
+
+  TracingProcessorSupplier(KafkaStreamsTracing kafkaStreamsTracing,
+      String spanName, Map<Long, String> annotations, Map<String, String> tags,
+      Processor<K, V> delegateProcessor) {
+    this.kafkaStreamsTracing = kafkaStreamsTracing;
+    this.spanName = spanName;
+    this.delegateProcessor = delegateProcessor;
+    this.annotations = annotations;
+    this.tags = tags;
   }
 
   /** This wraps process method to enable tracing. */
   @Override public Processor<K, V> get() {
-    return new TracingProcessor<>(kafkaStreamsTracing, spanName, delegateProcessor);
+    return new TracingProcessor<>(kafkaStreamsTracing, spanName, annotations, tags, delegateProcessor);
   }
 }
