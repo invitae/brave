@@ -18,12 +18,17 @@ import brave.Tracer;
 import org.apache.kafka.streams.kstream.ValueTransformerWithKey;
 import org.apache.kafka.streams.processor.ProcessorContext;
 
+import java.util.Collections;
+import java.util.Map;
+
 class TracingValueTransformerWithKey<K, V, VR> implements ValueTransformerWithKey<K, V, VR> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
   final Tracer tracer;
   final String spanName;
   final ValueTransformerWithKey<K, V, VR> delegateTransformer;
+  final Map<Long,String> annotations;
+  final Map<String, String> tags;
 
   ProcessorContext processorContext;
 
@@ -33,6 +38,19 @@ class TracingValueTransformerWithKey<K, V, VR> implements ValueTransformerWithKe
     this.tracer = kafkaStreamsTracing.tracing.tracer();
     this.spanName = spanName;
     this.delegateTransformer = delegateTransformer;
+    this.annotations = Collections.emptyMap();
+    this.tags = Collections.emptyMap();
+  }
+
+  TracingValueTransformerWithKey(KafkaStreamsTracing kafkaStreamsTracing, String spanName,
+      Map<Long, String> annotations, Map<String, String> tags,
+      ValueTransformerWithKey<K, V, VR> delegateTransformer) {
+    this.kafkaStreamsTracing = kafkaStreamsTracing;
+    this.tracer = kafkaStreamsTracing.tracing.tracer();
+    this.spanName = spanName;
+    this.delegateTransformer = delegateTransformer;
+    this.annotations = Collections.emptyMap();
+    this.tags = Collections.emptyMap();
   }
 
   @Override
@@ -46,6 +64,8 @@ class TracingValueTransformerWithKey<K, V, VR> implements ValueTransformerWithKe
     Span span = kafkaStreamsTracing.nextSpan(processorContext);
     if (!span.isNoop()) {
       span.name(spanName);
+      this.annotations.forEach(span::annotate);
+      this.tags.forEach(span::tag);
       span.start();
     }
 

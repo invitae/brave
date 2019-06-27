@@ -19,6 +19,9 @@ import org.apache.kafka.streams.KeyValue;
 import org.apache.kafka.streams.kstream.Predicate;
 import org.apache.kafka.streams.processor.ProcessorContext;
 
+import java.util.Collections;
+import java.util.Map;
+
 import static brave.kafka.streams.KafkaStreamsTags.KAFKA_STREAMS_FILTERED_TAG;
 
 class TracingFilterTransformer<K, V> extends AbstractTracingTransformer<K, V, KeyValue<K, V>> {
@@ -28,6 +31,9 @@ class TracingFilterTransformer<K, V> extends AbstractTracingTransformer<K, V, Ke
   final Predicate<K, V> delegatePredicate;
   final Tracer tracer;
   final boolean filterNot;
+  final Map<Long,String> annotations;
+  final Map<String, String> tags;
+
   ProcessorContext processorContext;
 
   TracingFilterTransformer(KafkaStreamsTracing tracing, String spanName,
@@ -37,6 +43,20 @@ class TracingFilterTransformer<K, V> extends AbstractTracingTransformer<K, V, Ke
     this.spanName = spanName;
     this.delegatePredicate = delegatePredicate;
     this.filterNot = filterNot;
+    this.annotations = Collections.emptyMap();
+    this.tags = Collections.emptyMap();
+  }
+
+  TracingFilterTransformer(KafkaStreamsTracing tracing, String spanName,
+      Map<Long, String> annotations, Map<String, String> tags,
+      Predicate<K, V> delegatePredicate, boolean filterNot) {
+    this.kafkaStreamsTracing = tracing;
+    this.tracer = kafkaStreamsTracing.tracing.tracer();
+    this.spanName = spanName;
+    this.delegatePredicate = delegatePredicate;
+    this.filterNot = filterNot;
+    this.annotations = Collections.emptyMap();
+    this.tags = Collections.emptyMap();
   }
 
   @Override
@@ -49,6 +69,8 @@ class TracingFilterTransformer<K, V> extends AbstractTracingTransformer<K, V, Ke
     Span span = kafkaStreamsTracing.nextSpan(processorContext);
     if (!span.isNoop()) {
       span.name(spanName);
+      this.annotations.forEach(span::annotate);
+      this.tags.forEach(span::tag);
       span.start();
     }
 

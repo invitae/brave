@@ -16,11 +16,16 @@ package brave.kafka.streams;
 import org.apache.kafka.streams.kstream.ValueTransformerWithKey;
 import org.apache.kafka.streams.kstream.ValueTransformerWithKeySupplier;
 
+import java.util.Collections;
+import java.util.Map;
+
 class TracingValueTransformerWithKeySupplier<K, V, VR> implements
     ValueTransformerWithKeySupplier<K, V, VR> {
   final KafkaStreamsTracing kafkaStreamsTracing;
   final String spanName;
   final ValueTransformerWithKey<K, V, VR> delegateTransformer;
+  final Map<Long, String> annotations;
+  final Map<String, String> tags;
 
   TracingValueTransformerWithKeySupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName,
@@ -28,6 +33,18 @@ class TracingValueTransformerWithKeySupplier<K, V, VR> implements
     this.kafkaStreamsTracing = kafkaStreamsTracing;
     this.spanName = spanName;
     this.delegateTransformer = delegateTransformer;
+    this.annotations = Collections.emptyMap();
+    this.tags = Collections.emptyMap();
+  }
+
+  TracingValueTransformerWithKeySupplier(KafkaStreamsTracing kafkaStreamsTracing,
+      String spanName, Map<Long, String> annotations, Map<String, String> tags,
+      ValueTransformerWithKey<K, V, VR> delegateTransformer) {
+    this.kafkaStreamsTracing = kafkaStreamsTracing;
+    this.spanName = spanName;
+    this.delegateTransformer = delegateTransformer;
+    this.annotations = annotations;
+    this.tags = tags;
   }
 
   /** This wraps transform method to enable tracing. */

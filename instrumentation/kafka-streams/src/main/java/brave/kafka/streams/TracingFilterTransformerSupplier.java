@@ -18,12 +18,17 @@ import org.apache.kafka.streams.kstream.Predicate;
 import org.apache.kafka.streams.kstream.Transformer;
 import org.apache.kafka.streams.kstream.TransformerSupplier;
 
+import java.util.Collections;
+import java.util.Map;
+
 public class TracingFilterTransformerSupplier<K, V> implements TransformerSupplier<K, V, KeyValue<K, V>> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
   final String spanName;
   final Predicate<K, V> delegatePredicate;
   final boolean filterNot;
+  final Map<Long, String> annotations;
+  final Map<String, String> tags;
 
   public TracingFilterTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName, Predicate<K, V> delegatePredicate, boolean filterNot) {
@@ -31,6 +36,19 @@ public class TracingFilterTransformerSupplier<K, V> implements TransformerSuppli
     this.spanName = spanName;
     this.delegatePredicate = delegatePredicate;
     this.filterNot = filterNot;
+    this.annotations = Collections.emptyMap();
+    this.tags = Collections.emptyMap();
+  }
+
+  public TracingFilterTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
+      String spanName, Map<Long, String> annotations, Map<String, String> tags,
+      Predicate<K, V> delegatePredicate, boolean filterNot) {
+    this.kafkaStreamsTracing = kafkaStreamsTracing;
+    this.spanName = spanName;
+    this.delegatePredicate = delegatePredicate;
+    this.filterNot = filterNot;
+    this.annotations = annotations;
+    this.tags = tags;
   }
 
   @Override public Transformer<K, V, KeyValue<K, V>> get() {

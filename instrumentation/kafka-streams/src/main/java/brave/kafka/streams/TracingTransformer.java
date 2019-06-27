@@ -64,9 +64,9 @@ class TracingTransformer<K, V, R> implements Transformer<K, V, R> {
     Span span = kafkaStreamsTracing.nextSpan(processorContext);
     if (!span.isNoop()) {
       span.name(spanName);
-      span.start();
       this.annotations.forEach(span::annotate);
       this.tags.forEach(span::tag);
+      span.start();
     }
 
     try (Tracer.SpanInScope ws = tracer.withSpanInScope(span)) {
