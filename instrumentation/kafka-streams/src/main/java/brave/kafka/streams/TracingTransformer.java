@@ -21,7 +21,7 @@ import org.apache.kafka.streams.processor.ProcessorContext;
 import java.util.Collections;
 import java.util.Map;
 
-class TracingTransformer<K, V, R> implements Transformer<K, V, R> {
+public class TracingTransformer<K, V, R> implements Transformer<K, V, R> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
   final Tracer tracer;

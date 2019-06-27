@@ -19,7 +19,7 @@ import org.apache.kafka.streams.kstream.TransformerSupplier;
 import java.util.Collections;
 import java.util.Map;
 
-class TracingTransformerSupplier<K, V, R> implements TransformerSupplier<K, V, R> {
+public class TracingTransformerSupplier<K, V, R> implements TransformerSupplier<K, V, R> {
   final KafkaStreamsTracing kafkaStreamsTracing;
   final String spanName;
   final Transformer<K, V, R> delegateTransformer;

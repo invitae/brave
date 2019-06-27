@@ -19,7 +19,7 @@ import org.apache.kafka.streams.processor.ProcessorSupplier;
 import java.util.Collections;
 import java.util.Map;
 
-class TracingProcessorSupplier<K, V> implements ProcessorSupplier<K, V> {
+public class TracingProcessorSupplier<K, V> implements ProcessorSupplier<K, V> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
   final String spanName;

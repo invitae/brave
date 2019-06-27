@@ -21,7 +21,7 @@ import org.apache.kafka.streams.processor.ProcessorContext;
 import java.util.Collections;
 import java.util.Map;
 
-class TracingProcessor<K, V> implements Processor<K, V> {
+public class TracingProcessor<K, V> implements Processor<K, V> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
   final Tracer tracer;

@@ -19,7 +19,7 @@ import org.apache.kafka.streams.kstream.ValueTransformerSupplier;
 import java.util.Collections;
 import java.util.Map;
 
-class TracingValueTransformerSupplier<V, VR> implements ValueTransformerSupplier<V, VR> {
+public class TracingValueTransformerSupplier<V, VR> implements ValueTransformerSupplier<V, VR> {
   final KafkaStreamsTracing kafkaStreamsTracing;
   final String spanName;
   final ValueTransformer<V, VR> delegateTransformer;

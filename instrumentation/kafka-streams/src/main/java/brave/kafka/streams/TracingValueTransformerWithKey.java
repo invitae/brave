@@ -21,7 +21,7 @@ import org.apache.kafka.streams.processor.ProcessorContext;
 import java.util.Collections;
 import java.util.Map;
 
-class TracingValueTransformerWithKey<K, V, VR> implements ValueTransformerWithKey<K, V, VR> {
+public class TracingValueTransformerWithKey<K, V, VR> implements ValueTransformerWithKey<K, V, VR> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
   final Tracer tracer;
