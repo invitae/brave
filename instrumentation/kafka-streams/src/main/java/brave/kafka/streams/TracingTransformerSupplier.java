@@ -21,33 +21,32 @@ import java.util.Map;
 
 public class TracingTransformerSupplier<K, V, R> implements TransformerSupplier<K, V, R> {
   final KafkaStreamsTracing kafkaStreamsTracing;
-  final String spanName;
   final Transformer<K, V, R> delegateTransformer;
-  final Map<Long,String> annotations;
-  final Map<String, String> tags;
+  final SpanInfo spanInfo;
 
   public TracingTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName,
       Transformer<K, V, R> delegateTransformer) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
-    this.spanName = spanName;
     this.delegateTransformer = delegateTransformer;
-    this.annotations = Collections.emptyMap();
-    this.tags = Collections.emptyMap();
+    this.spanInfo = new SpanInfo(spanName);
   }
 
   public TracingTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName, Map<Long, String> annotations, Map<String, String> tags,
       Transformer<K, V, R> delegateTransformer) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
-    this.spanName = spanName;
     this.delegateTransformer = delegateTransformer;
-    this.annotations = annotations;
-    this.tags = tags;
+    this.spanInfo = new SpanInfo(spanName, annotations, tags);
+  }
+
+  public SpanInfo getSpanInfo() {
+    return this.spanInfo;
   }
 
   /** This wraps transform method to enable tracing. */
   @Override public Transformer<K, V, R> get() {
-    return new TracingTransformer<>(kafkaStreamsTracing, spanName, annotations, tags, delegateTransformer);
+    final SpanInfo spanInfo = this.getSpanInfo();
+    return new TracingTransformer<>(kafkaStreamsTracing, spanInfo.spanName, spanInfo.annotations, spanInfo.tags, delegateTransformer);
  }
 }

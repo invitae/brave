@@ -22,33 +22,32 @@ import java.util.Map;
 public class TracingProcessorSupplier<K, V> implements ProcessorSupplier<K, V> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
-  final String spanName;
   final Processor<K, V> delegateProcessor;
-  final Map<Long, String> annotations;
-  final Map<String, String> tags;
+  final SpanInfo spanInfo;
 
   public TracingProcessorSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName,
       Processor<K, V> delegateProcessor) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
-    this.spanName = spanName;
     this.delegateProcessor = delegateProcessor;
-    this.annotations = Collections.emptyMap();
-    this.tags = Collections.emptyMap();
+    this.spanInfo = new SpanInfo(spanName);
   }
 
   public TracingProcessorSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName, Map<Long, String> annotations, Map<String, String> tags,
       Processor<K, V> delegateProcessor) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
-    this.spanName = spanName;
     this.delegateProcessor = delegateProcessor;
-    this.annotations = annotations;
-    this.tags = tags;
+    this.spanInfo = new SpanInfo(spanName, annotations, tags);
+  }
+
+  public SpanInfo getSpanInfo() {
+    return this.spanInfo;
   }
 
   /** This wraps process method to enable tracing. */
   @Override public Processor<K, V> get() {
-    return new TracingProcessor<>(kafkaStreamsTracing, spanName, annotations, tags, delegateProcessor);
+    final SpanInfo spanInfo = this.getSpanInfo();
+    return new TracingProcessor<>(kafkaStreamsTracing, spanInfo.spanName, spanInfo.annotations, spanInfo.tags, delegateProcessor);
   }
 }
