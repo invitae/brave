@@ -27,7 +27,7 @@ public class TracingProcessorSupplier<K, V> implements ProcessorSupplier<K, V> {
   final Map<Long, String> annotations;
   final Map<String, String> tags;
 
-  TracingProcessorSupplier(KafkaStreamsTracing kafkaStreamsTracing,
+  public TracingProcessorSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName,
       Processor<K, V> delegateProcessor) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
@@ -37,7 +37,7 @@ public class TracingProcessorSupplier<K, V> implements ProcessorSupplier<K, V> {
     this.tags = Collections.emptyMap();
   }
 
-  TracingProcessorSupplier(KafkaStreamsTracing kafkaStreamsTracing,
+  public TracingProcessorSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName, Map<Long, String> annotations, Map<String, String> tags,
       Processor<K, V> delegateProcessor) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;

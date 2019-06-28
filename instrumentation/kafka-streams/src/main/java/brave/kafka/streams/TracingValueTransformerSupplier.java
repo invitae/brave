@@ -26,7 +26,7 @@ public class TracingValueTransformerSupplier<V, VR> implements ValueTransformerS
   final Map<Long, String> annotations;
   final Map<String, String> tags;
 
-  TracingValueTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
+  public TracingValueTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName,
       ValueTransformer<V, VR> delegateTransformer) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
@@ -36,7 +36,7 @@ public class TracingValueTransformerSupplier<V, VR> implements ValueTransformerS
     this.tags = Collections.emptyMap();
   }
 
-  TracingValueTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
+  public TracingValueTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName, Map<Long, String> annotations, Map<String, String> tags,
       ValueTransformer<V, VR> delegateTransformer) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;

@@ -26,7 +26,7 @@ public class TracingTransformerSupplier<K, V, R> implements TransformerSupplier<
   final Map<Long,String> annotations;
   final Map<String, String> tags;
 
-  TracingTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
+  public TracingTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName,
       Transformer<K, V, R> delegateTransformer) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
@@ -36,7 +36,7 @@ public class TracingTransformerSupplier<K, V, R> implements TransformerSupplier<
     this.tags = Collections.emptyMap();
   }
 
-  TracingTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
+  public TracingTransformerSupplier(KafkaStreamsTracing kafkaStreamsTracing,
       String spanName, Map<Long, String> annotations, Map<String, String> tags,
       Transformer<K, V, R> delegateTransformer) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
