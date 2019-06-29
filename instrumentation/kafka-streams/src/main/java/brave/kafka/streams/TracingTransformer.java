@@ -20,37 +20,24 @@ import org.apache.kafka.streams.processor.ProcessorContext;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.function.BiFunction;
 
 public class TracingTransformer<K, V, R> implements Transformer<K, V, R> {
 
   final KafkaStreamsTracing kafkaStreamsTracing;
   final Tracer tracer;
-  final String spanName;
   final Transformer<K, V, R> delegateTransformer;
-  final Map<Long, String> annotations;
-  final Map<String, String> tags;
+  final BiFunction<K, V, SpanInfo> mkSpan;
 
   ProcessorContext processorContext;
 
-  TracingTransformer(KafkaStreamsTracing kafkaStreamsTracing, String spanName,
+  TracingTransformer(KafkaStreamsTracing kafkaStreamsTracing,
+      BiFunction<K, V, SpanInfo> mkSpan,
       Transformer<K, V, R> delegateTransformer) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
     this.tracer = kafkaStreamsTracing.tracing.tracer();
-    this.spanName = spanName;
     this.delegateTransformer = delegateTransformer;
-    this.annotations = Collections.emptyMap();
-    this.tags = Collections.emptyMap();
-  }
-
-  TracingTransformer(KafkaStreamsTracing kafkaStreamsTracing, String spanName,
-      Map<Long, String> annotations, Map<String, String> tags,
-      Transformer<K, V, R> delegateTransformer) {
-    this.kafkaStreamsTracing = kafkaStreamsTracing;
-    this.tracer = kafkaStreamsTracing.tracing.tracer();
-    this.spanName = spanName;
-    this.delegateTransformer = delegateTransformer;
-    this.annotations = annotations;
-    this.tags = tags;
+    this.mkSpan = mkSpan;
   }
 
   @Override
@@ -61,11 +48,12 @@ public class TracingTransformer<K, V, R> implements Transformer<K, V, R> {
 
   @Override
   public R transform(K k, V v) {
+    SpanInfo info = mkSpan.apply(k, v);
     Span span = kafkaStreamsTracing.nextSpan(processorContext);
     if (!span.isNoop()) {
-      span.name(spanName);
-      this.annotations.forEach(span::annotate);
-      this.tags.forEach(span::tag);
+      span.name(info.spanName);
+      info.annotations.forEach(span::annotate);
+      info.tags.forEach(span::tag);
       span.start();
     }
 

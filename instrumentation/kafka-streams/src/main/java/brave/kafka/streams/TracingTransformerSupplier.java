@@ -40,13 +40,12 @@ public class TracingTransformerSupplier<K, V, R> implements TransformerSupplier<
     this.spanInfo = new SpanInfo(spanName, annotations, tags);
   }
 
-  public SpanInfo getSpanInfo() {
+  public SpanInfo getSpanInfo(K k, V v) {
     return this.spanInfo;
   }
 
   /** This wraps transform method to enable tracing. */
   @Override public Transformer<K, V, R> get() {
-    final SpanInfo spanInfo = this.getSpanInfo();
-    return new TracingTransformer<>(kafkaStreamsTracing, spanInfo.spanName, spanInfo.annotations, spanInfo.tags, delegateTransformer);
+    return new TracingTransformer<>(kafkaStreamsTracing, this::getSpanInfo, delegateTransformer);
  }
 }

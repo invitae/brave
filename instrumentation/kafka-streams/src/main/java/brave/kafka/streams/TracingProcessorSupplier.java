@@ -41,13 +41,12 @@ public class TracingProcessorSupplier<K, V> implements ProcessorSupplier<K, V> {
     this.spanInfo = new SpanInfo(spanName, annotations, tags);
   }
 
-  public SpanInfo getSpanInfo() {
+  public SpanInfo getSpanInfo(K k, V v) {
     return this.spanInfo;
   }
 
   /** This wraps process method to enable tracing. */
   @Override public Processor<K, V> get() {
-    final SpanInfo spanInfo = this.getSpanInfo();
-    return new TracingProcessor<>(kafkaStreamsTracing, spanInfo.spanName, spanInfo.annotations, spanInfo.tags, delegateProcessor);
+    return new TracingProcessor<>(kafkaStreamsTracing, this::getSpanInfo, delegateProcessor);
   }
 }
