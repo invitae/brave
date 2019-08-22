@@ -31,7 +31,7 @@ public class TracingProcessor<K, V> implements Processor<K, V> {
 
   ProcessorContext processorContext;
 
-  TracingProcessor(KafkaStreamsTracing kafkaStreamsTracing,
+  public TracingProcessor(KafkaStreamsTracing kafkaStreamsTracing,
       BiFunction<K, V, SpanInfo> mkSpan,
       Processor<K, V> delegateProcessor) {
     this.kafkaStreamsTracing = kafkaStreamsTracing;
