@@ -302,4 +302,14 @@ final class TracingConsumer<K, V> implements Consumer<K, V> {
     span.name("poll").kind(Span.Kind.CONSUMER).tag(KafkaTags.KAFKA_TOPIC_TAG, topic);
     if (remoteServiceName != null) span.remoteServiceName(remoteServiceName);
   }
+
+  @Override
+  public Map<TopicPartition, OffsetAndMetadata> committed(Set<TopicPartition> set) {
+    return delegate.committed(set);
+  }
+
+  @Override
+  public Map<TopicPartition, OffsetAndMetadata> committed(Set<TopicPartition> set, Duration duration) {
+    return delegate.committed(set, duration);
+  }
 }
